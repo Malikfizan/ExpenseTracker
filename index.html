@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Expense Tracker</title>
+<style>
+
+    
+
+.container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid rgb(211, 184, 184);
+            border-radius: 5px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 95%;
+            margin-bottom: 5px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid rgb(211, 184, 184);
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* .edit-btn,
+        .delete-btn {
+            margin-left: 10px;
+        } */
+        #add-expense
+        {
+            background-color: blue;
+            font-weight: 800;
+
+        }
+        #expense-table
+        {
+            margin-top: 20px;
+        }
+    table {
+        border-collapse: collapse;
+        padding: 10px;
+        width: 100%;
+    }
+
+    th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #f2f2f2;
+    }
+
+    tr:hover {
+        background-color: #f2f2f2;
+    }
+
+    .edit-btn, .delete-btn {
+        padding: 10px 10px;
+        border: none;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        border-radius: 5px;
+    }
+
+    .edit-btn {
+        background-color: #4CAF50;
+        color: white;
+        margin-right: 5px;
+    }
+
+    .delete-btn {
+        background-color: #f44336;
+        color: white;
+    }
+
+    .center-class {
+        text-align: center;
+    }
+    .bold{
+        font-weight: 800;
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>Expense Tracker</h1>
+    <form id="expense-form">
+        <input type="text" id="expense-name" placeholder="Expense Name">
+        <input type="number" id="expense-amount" placeholder="Expense Amount">
+        <button type="button" id="add-expense">Add Expense</button>
+    </form>
+    <table id="expense-table">
+        <thead>
+            <tr>
+                <th class="center-class">Name</th>
+                <th class="center-class">Amount</th>
+                <th class="center-class">Action</th>
+            </tr>
+        </thead>
+        <tbody id="expense-list"></tbody>
+    </table>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const expenseList = document.getElementById('expense-list');
+        const expenseNameInput = document.getElementById('expense-name');
+        const expenseAmountInput = document.getElementById('expense-amount');
+        const addExpenseBtn = document.getElementById('add-expense');
+        let expenses = [];
+
+        // Check if there are saved expenses in local storage
+        if (localStorage.getItem('expenses')) {
+            expenses = JSON.parse(localStorage.getItem('expenses'));
+            displayExpenses();
+        }
+
+        addExpenseBtn.addEventListener('click', function () {
+            const expenseName = expenseNameInput.value;
+            const expenseAmount = expenseAmountInput.value;
+            if (expenseName && expenseAmount) {
+                const expense = {
+                    id: Date.now(),
+                    name: expenseName,
+                    amount: parseFloat(expenseAmount)
+                };
+                expenses.push(expense);
+                saveExpenses();
+                displayExpenses();
+                expenseNameInput.value = '';
+                expenseAmountInput.value = '';
+            } else {
+                alert('Please enter both expense name and amount');
+            }
+        });
+
+        function displayExpenses() {
+            expenseList.innerHTML = '';
+            expenses.forEach(expense => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="center-class bold">${expense.name}</td>
+                    <td class="center-class bold">$${expense.amount.toFixed(2)}</td>
+                    <td class="center-class">
+                        <button class="edit-btn" data-id="${expense.id}">Edit</button>
+                        <button class="delete-btn" data-id="${expense.id}">Delete</button>
+                    </td>`;
+                expenseList.appendChild(row);
+            });
+            addEditDeleteListeners();
+        }
+
+        function addEditDeleteListeners() {
+            document.querySelectorAll('.edit-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = parseInt(button.getAttribute('data-id'));
+                    editExpense(id);
+                });
+            });
+
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = parseInt(button.getAttribute('data-id'));
+                    deleteExpense(id);
+                });
+            });
+        }
+
+        function editExpense(id) {
+            const index = expenses.findIndex(expense => expense.id === id);
+            if (index !== -1) {
+                const editedName = prompt('Enter edited expense name:');
+                const editedAmount = parseFloat(prompt('Enter edited expense amount:'));
+                if (editedName && !isNaN(editedAmount)) {
+                    expenses[index].name = editedName;
+                    expenses[index].amount = editedAmount;
+                    saveExpenses();
+                    displayExpenses();
+                } else {
+                    alert('Invalid input');
+                }
+            }
+        }
+
+        function deleteExpense(id) {
+            const confirmDelete = confirm('Are you sure you want to delete this expense?');
+            if (confirmDelete) {
+                expenses = expenses.filter(expense => expense.id !== id);
+                saveExpenses();
+                displayExpenses();
+            }
+        }
+
+        function saveExpenses() {
+            localStorage.setItem('expenses', JSON.stringify(expenses));
+        }
+    });
+</script>
+</body>
+</html>
